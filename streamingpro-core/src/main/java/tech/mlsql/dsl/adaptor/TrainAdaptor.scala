@@ -81,7 +81,6 @@ class TrainAdaptor(scriptSQLExecListener: ScriptSQLExecListener) extends DslAdap
 
     val owner = options.get("owner")
     val df = scriptSQLExecListener.sparkSession.table(tableName)
-    
     if (!sqlAlg.skipPathPrefix) {
       path = withPathPrefix(scriptSQLExecListener.pathPrefix(owner), path)
     }
