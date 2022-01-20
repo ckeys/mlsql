@@ -9,8 +9,8 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.expressions.UserDefinedFunction
 import streaming.dsl.ScriptSQLExec
 import streaming.dsl.auth.{DB_DEFAULT, MLSQLTable, OperateType, TableAuthResult, TableType}
-import streaming.dsl.mmlib.SQLAlg
-import streaming.dsl.mmlib.algs.{Functions, MllibFunctions}
+import streaming.dsl.mmlib.{Code, SQLAlg, SQLCode}
+import streaming.dsl.mmlib.algs.{CodeExampleText, Functions, MllibFunctions}
 import streaming.dsl.mmlib.algs.param.BaseParams
 import tech.mlsql.common.form.{Extra, FormParams, KV, Select}
 import tech.mlsql.dsl.adaptor.MLMapping
@@ -94,22 +94,24 @@ class SQLMissingValueProcess(override val uid: String) extends SQLAlg with Mllib
     data
   }
 
-  val method:Param[String] = new Param[String](this, "method", FormParams.toJson(
-    Select(
-      name = "method",
-      values = List(),
-      extra = Extra(
-        doc = "",
-        label = "",
-        options = Map(
-        )), valueProvider = Option(() => {
-        List(
-          KV(Some("method"), Some(DiscretizerFeature.BUCKETIZER_METHOD)),
-          KV(Some("method"), Some(DiscretizerFeature.QUANTILE_METHOD))
-        )
-      })
-    )
-  ))
+  override def codeExample: Code = Code(SQLCode, CodeExampleText.jsonStr +
+    """
+      |
+      |set abc='''
+      |{"name": "elena", "age": 57, "phone": 15552231521, "income": 433000, "label": 0}
+      |{"name": "candy", "age": 67, "phone": 15552231521, "income": null, "label": 0}
+      |{"name": "bob", "age": 57, "phone": 15252211521, "income": 89000, "label": 0}
+      |{"name": "candy", "age": 25, "phone": 15552211522, "income": 36000, "label": 1}
+      |{"name": "candy", "age": 31, "phone": 15552211521, "income": null, "label": 1}
+      |{"name": "finn", "age": 23, "phone": 15552211521, "income": 238000, "label": 1}
+      |''';
+      |load jsonStr.`abc` as table1;
+      |run table1 as MissingValueProcess.`/tmp/fe_test/missingvalueFillout`
+      |where method="mean"
+      |and processColumns='income';
+      |
+      |;
+    """.stripMargin)
 
   override def load(sparkSession: SparkSession, path: String, params: Map[String, String]): Any = ???
 
